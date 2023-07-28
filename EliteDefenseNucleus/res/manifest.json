@@ -2,7 +2,7 @@
   "name": "EliteDefenseNucleus",
   "author": "MarkTullius",
   "authorName": "MarkTullius",
-  "version_number": "0.0.1",
+  "version_number": "1.0.0",
   "website_url": "",
   "description": "Gives a spawned Alpha Construct the same elite type as the enemy that was killed to spawn it.",
   "dependencies": [
