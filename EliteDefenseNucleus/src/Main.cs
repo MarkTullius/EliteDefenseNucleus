@@ -23,25 +23,21 @@ namespace EliteDefenseNucleus
     {
       On.RoR2.GlobalEventManager.OnCharacterDeath += OnCharacterDeath;
       On.RoR2.CharacterBody.Start += OnConstructSpawn;
-      On.RoR2.Run.Update += CountUpdate;
     }
 
     private void OnCharacterDeath(On.RoR2.GlobalEventManager.orig_OnCharacterDeath orig, GlobalEventManager self, DamageReport damageReport)
     {
-      Debug.Log("Death registered");
       CharacterBody victimBody = damageReport.victimBody;            
       CharacterMaster attackerMaster = damageReport.attackerMaster;
       CharacterBody attackerBody = damageReport.attackerBody;
       if (attackerBody && attackerBody.isPlayerControlled)
       {
+        CountUpdate(attackerMaster);
         Inventory inventory = (attackerMaster ? attackerMaster.inventory : null);
         if (victimBody.isElite && CanSpawnConstruct(inventory))
         {
-          Debug.Log("Enemy is elite");
           EquipmentIndex eliteEQ = victimBody.inventory.GetEquipmentIndex();
-          Debug.Log($"Elite EQ name: {EquipmentCatalog.GetEquipmentDef(eliteEQ).name}");
           eliteQueue.Add(eliteEQ);
-          Debug.Log("Elite Equipment added to queue");
         }
       }      
       orig(self, damageReport);
@@ -51,20 +47,11 @@ namespace EliteDefenseNucleus
     {
       if (self.name == "MinorConstructOnKillBody(Clone)")
       {
-        Debug.Log("Spawning Alpha Construct");
         if (eliteQueue.Count > 0)
         {
-          Debug.Log("Valid EQ Index");
           string eqName = EquipmentCatalog.GetEquipmentDef(eliteQueue.FirstOrDefault<EquipmentIndex>()).name;
           self.inventory.GiveEquipmentString(eqName);
-          Debug.Log($"Elite Equipment for {eqName} added");
-          Debug.Log($"Is elite: {self.isElite}");
-          Debug.Log($"Elite Buff count: {self.eliteBuffCount}");
           eliteQueue.RemoveAt(0);
-        }
-        else
-        {
-          Debug.Log("No equipments to give");
         }
       }
       orig(self);
@@ -82,11 +69,10 @@ namespace EliteDefenseNucleus
       }
     }
 
-    private void CountUpdate(On.RoR2.Run.orig_Update orig, Run self)
+    private void CountUpdate(CharacterMaster master)
     {
-      orig(self);
       constructCount = CountCharacterBodiesWithName("MinorConstructOnKillBody(Clone)");
-      constructLimit = PlayerCharacterMasterController._instancesReadOnly[0].body.inventory.GetItemCount(ItemCatalog.FindItemIndex("MinorConstructOnKill"));
+      constructLimit = master.inventory.GetItemCount(ItemCatalog.FindItemIndex("MinorConstructOnKill")) * 4;
     }
 
     private int CountCharacterBodiesWithName(string nameToFind)
